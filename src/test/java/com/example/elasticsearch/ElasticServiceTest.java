@@ -43,6 +43,15 @@ class ElasticServiceTest {
     }
 
     @Test
+    void getSuggestionsUsingFirstname() {
+        String field = "firstName";
+        String query = "zou";
+        List<SearchHit<StudentModel>> listSearchHits = elasticService.getSuggestions(field,query);
+        System.out.println()
+        assertThat(listSearchHits).hasSize(1).allMatch((searchHit) -> searchHit.getContent().getFirstName().contains(query));
+    }
+
+    @Test
     void getClusterInformation(){
         ClusterInformation clusterInformation = elasticService.getClusterInformation();
         assertThat(clusterInformation.getClusterName()).isEqualTo("elasticsearch");
