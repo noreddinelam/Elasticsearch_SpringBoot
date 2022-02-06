@@ -17,7 +17,7 @@ public class StudentModel {
     private final String firstName;
     @Field(type = FieldType.Text)
     private final String lastName;
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Keyword)
     private final String address;
     @Field(type = FieldType.Integer)
     private final int age;
