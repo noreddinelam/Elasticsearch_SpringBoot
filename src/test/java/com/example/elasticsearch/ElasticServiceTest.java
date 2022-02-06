@@ -1,5 +1,7 @@
 package com.example.elasticsearch;
 
+import com.example.elasticsearch.Models.ClusterInformation;
+import com.example.elasticsearch.Models.StudentModel;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,5 +40,11 @@ class ElasticServiceTest {
     void findMaturePersons() {
         List<SearchHit<StudentModel>> listSearchHits = elasticService.findMaturePersons();
         assertThat(listSearchHits).allMatch((searchHit) -> searchHit.getContent().getAge() > 18);
+    }
+
+    @Test
+    void getClusterInformation(){
+        ClusterInformation clusterInformation = elasticService.getClusterInformation();
+        assertThat(clusterInformation.getClusterName()).isEqualTo("elasticsearch");
     }
 }

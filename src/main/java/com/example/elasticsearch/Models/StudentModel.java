@@ -1,4 +1,4 @@
-package com.example.elasticsearch;
+package com.example.elasticsearch.Models;
 
 import lombok.Builder;
 import lombok.Data;
