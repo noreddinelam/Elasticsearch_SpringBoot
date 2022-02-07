@@ -60,12 +60,21 @@ class ElasticServiceTest {
     }
 
     @Test
-    void getAllStudentsWithAddressOrder() {
+    void getAllStudentsWithFieldOrderV1() {
         String field = "age";
         Sort.Direction direction = Sort.Direction.ASC;
-        List<StudentModel> listStudents = elasticService.getAllStudentsWithFieldOrder(field,direction);
+        List<StudentModel> listStudents = elasticService.getAllStudentsWithFieldOrderV1(field,direction);
         List<Integer> expectedAddressesOrder = Arrays.asList(13,17,22,25,25,98);
         assertThat(listStudents.stream().map(StudentModel::getAge).collect(Collectors.toList())).isEqualTo(expectedAddressesOrder);
+    }
+
+    @Test
+    void getAllStudentsWithFieldOrderV2() {
+        String field = "age";
+        SortOrder sortOrder = SortOrder.ASC;
+        List<SearchHit<StudentModel>>  listStudents = elasticService.getAllStudentsWithFieldOrderV2(field,sortOrder);
+        List<Integer> expectedAddressesOrder = Arrays.asList(13,17,22,25,25,98);
+        assertThat(listStudents.stream().map((sh) -> sh.getContent().getAge()).collect(Collectors.toList())).isEqualTo(expectedAddressesOrder);
     }
 
     @Test

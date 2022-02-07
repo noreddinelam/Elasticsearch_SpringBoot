@@ -15,6 +15,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilde
 import org.elasticsearch.search.aggregations.metrics.Avg;
 import org.elasticsearch.search.aggregations.metrics.AvgAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,11 +46,19 @@ public class ElasticService {
         return searchHits.getSearchHits();
     }
 
-    public List<StudentModel> getAllStudentsWithFieldOrder(String field, Sort.Direction sortDirection) {
-        Sort sort = Sort.by(sortDirection,field);
+    public List<StudentModel> getAllStudentsWithFieldOrderV1(String field, Sort.Direction sortDirection) {
+        Sort sort = Sort.by(sortDirection, field);
         List<StudentModel> studentModel = new ArrayList<>();
         elasticRepo.findAll(sort).forEach(studentModel::add);
         return studentModel;
+    }
+
+    public List<SearchHit<StudentModel>> getAllStudentsWithFieldOrderV2(String field, SortOrder sortOrder) {
+        NativeSearchQuery nsq = new NativeSearchQuery(null, null,
+                Collections.singletonList(SortBuilders.fieldSort(field).order(sortOrder))
+        );
+        SearchHits<StudentModel> searchHits = elasticTemplate.search(nsq, StudentModel.class);
+        return searchHits.getSearchHits();
     }
 
     public List<SearchHit<StudentModel>> getSuggestions(String field, String query) {
@@ -67,7 +77,7 @@ public class ElasticService {
         return response.getAggregations().asMap();
     }
 
-    public Map<String,Aggregation> getGroupOfStudentsByAddressAndAverageAge() throws IOException {
+    public Map<String, Aggregation> getGroupOfStudentsByAddressAndAverageAge() throws IOException {
         TermsAggregationBuilder aggregation = AggregationBuilders.terms("addresses")
                 .field("address").subAggregation(AggregationBuilders.avg("AGE_AVG").field("age"));
         SearchSourceBuilder builder = new SearchSourceBuilder().aggregation(aggregation);
