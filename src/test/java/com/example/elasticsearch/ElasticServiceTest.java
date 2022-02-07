@@ -3,17 +3,19 @@ package com.example.elasticsearch;
 import com.example.elasticsearch.Models.ClusterInformation;
 import com.example.elasticsearch.Models.StudentModel;
 import org.elasticsearch.search.aggregations.Aggregation;
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.metrics.Avg;
+import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.SearchHit;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -58,6 +60,15 @@ class ElasticServiceTest {
     }
 
     @Test
+    void getAllStudentsWithAddressOrder() {
+        String field = "age";
+        Sort.Direction direction = Sort.Direction.ASC;
+        List<StudentModel> listStudents = elasticService.getAllStudentsWithFieldOrder(field,direction);
+        List<Integer> expectedAddressesOrder = Arrays.asList(13,17,22,25,25,98);
+        assertThat(listStudents.stream().map(StudentModel::getAge).collect(Collectors.toList())).isEqualTo(expectedAddressesOrder);
+    }
+
+    @Test
     void getSuggestionsUsingFirstname() {
         String field = "firstName";
         String query = "zou";
@@ -87,7 +98,7 @@ class ElasticServiceTest {
     }
 
     @Test
-    void getGroupOfStudentsByAddressAndAverageAge(){
+    void getGroupOfStudentsByAddressAndAverageAge() {
         try {
             String aggregationName = "addresses";
             String subAggregationName = "AGE_AVG";
@@ -95,15 +106,16 @@ class ElasticServiceTest {
             assertThat(aggregations).hasSize(1);
             assertThat(aggregations.get(aggregationName).getName()).isEqualTo("addresses");
             ParsedStringTerms terms = (ParsedStringTerms) aggregations.get(aggregationName);
-            List<Double> list = terms.getBuckets().stream().map(MultiBucketsAggregation.Bucket::getAggregations).map((aggs) -> aggs.<Avg>get(subAggregationName).getValue()).collect(Collectors.toList());
-            assertThat(list).containsExactlyInAnyOrder(19.,19.5,98.,25.);
+            List<Double> list =
+                    terms.getBuckets().stream().map(MultiBucketsAggregation.Bucket::getAggregations).map((aggs) -> aggs.<Avg>get(subAggregationName).getValue()).collect(Collectors.toList());
+            assertThat(list).containsExactlyInAnyOrder(19., 19.5, 98., 25.);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     @Test
-    void getAverageStudentsAge(){
+    void getAverageStudentsAge() {
         try {
             int avg = (int) (elasticService.getAverageStudentsAge());
             assertThat(avg).isEqualTo(33);

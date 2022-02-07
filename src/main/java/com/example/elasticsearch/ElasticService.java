@@ -15,6 +15,8 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilde
 import org.elasticsearch.search.aggregations.metrics.Avg;
 import org.elasticsearch.search.aggregations.metrics.AvgAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortOrder;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -23,6 +25,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,6 +42,13 @@ public class ElasticService {
         QueryBuilder qb = QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("age").gte(18));
         SearchHits<StudentModel> searchHits = elasticTemplate.search(new NativeSearchQuery(qb), StudentModel.class);
         return searchHits.getSearchHits();
+    }
+
+    public List<StudentModel> getAllStudentsWithFieldOrder(String field, Sort.Direction sortDirection) {
+        Sort sort = Sort.by(sortDirection,field);
+        List<StudentModel> studentModel = new ArrayList<>();
+        elasticRepo.findAll(sort).forEach(studentModel::add);
+        return studentModel;
     }
 
     public List<SearchHit<StudentModel>> getSuggestions(String field, String query) {
