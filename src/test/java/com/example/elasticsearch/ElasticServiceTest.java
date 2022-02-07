@@ -3,8 +3,10 @@ package com.example.elasticsearch;
 import com.example.elasticsearch.Models.ClusterInformation;
 import com.example.elasticsearch.Models.StudentModel;
 import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
+import org.elasticsearch.search.aggregations.metrics.Avg;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -79,6 +81,22 @@ class ElasticServiceTest {
                     "CRETEIL", "10 BD PABLO PICASSO, 94000 CRETEIL", "17 BD PABLO PICASSO, 94000 CRETEIL");
             Long l = terms.getBuckets().stream().map(MultiBucketsAggregation.Bucket::getDocCount).reduce(0L, Long::sum);
             assertThat(l).isEqualTo(6);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    void getGroupOfStudentsByAddressAndAverageAge(){
+        try {
+            String aggregationName = "addresses";
+            String subAggregationName = "AGE_AVG";
+            Map<String, Aggregation> aggregations = elasticService.getGroupOfStudentsByAddressAndAverageAge();
+            assertThat(aggregations).hasSize(1);
+            assertThat(aggregations.get(aggregationName).getName()).isEqualTo("addresses");
+            ParsedStringTerms terms = (ParsedStringTerms) aggregations.get(aggregationName);
+            List<Double> list = terms.getBuckets().stream().map(MultiBucketsAggregation.Bucket::getAggregations).map((aggs) -> aggs.<Avg>get(subAggregationName).getValue()).collect(Collectors.toList());
+            assertThat(list).containsExactlyInAnyOrder(19.,19.5,98.,25.);
         } catch (IOException e) {
             e.printStackTrace();
         }
