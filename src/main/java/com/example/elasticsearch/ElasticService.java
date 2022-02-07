@@ -14,6 +14,8 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.Avg;
+import org.elasticsearch.search.aggregations.metrics.AvgAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.data.elasticsearch.core.AggregationsContainer;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
@@ -54,11 +56,20 @@ public class ElasticService {
         TermsAggregationBuilder aggregation = AggregationBuilders.terms("addresses")
                 .field("address");
         SearchSourceBuilder builder = new SearchSourceBuilder().aggregation(aggregation);
-
         SearchRequest searchRequest =
                 new SearchRequest().indices("student").source(builder);
         SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
         return response.getAggregations().asMap();
+    }
+
+    public double getAverageStudentsAge() throws IOException {
+        AvgAggregationBuilder aggregation = AggregationBuilders.avg("AVG_AGE")
+                .field("age");
+        SearchSourceBuilder builder = new SearchSourceBuilder().aggregation(aggregation);
+        SearchRequest searchRequest =
+                new SearchRequest().indices("student").source(builder);
+        SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
+        return response.getAggregations().<Avg>get("AVG_AGE").getValue();
     }
 
     public List<StudentModel> indexStudents(List<StudentModel> students) {

@@ -82,7 +82,16 @@ class ElasticServiceTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    @Test
+    void getAverageStudentsAge(){
+        try {
+            int avg = (int) (elasticService.getAverageStudentsAge());
+            assertThat(avg).isEqualTo(33);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
