@@ -7,6 +7,7 @@ import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.metrics.Avg;
 import org.elasticsearch.search.sort.SortOrder;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,9 +29,10 @@ class ElasticServiceTest {
     @Autowired
     private ElasticService elasticService;
 
-    @Test
-    void indexStudents() {
-        List<StudentModel> listStudents = new ArrayList<>();
+    private static List<StudentModel> listStudents = new ArrayList<>();
+
+    @BeforeAll
+    public static void initListStudents(){
         listStudents.add(StudentModel.builder().firstName("zoubir").lastName("roubir").age(22).address("2 BD PABLO " +
                 "PICASSO, " +
                 "94000 CRETEIL").build());
@@ -49,6 +51,10 @@ class ElasticServiceTest {
         listStudents.add(StudentModel.builder().firstName("idk").lastName("idnk").age(25).address("17 BD PABLO " +
                 "PICASSO, " +
                 "94000 CRETEIL").build());
+    }
+
+    @Test
+    void indexStudents() {
         List<StudentModel> list = elasticService.indexStudents(listStudents);
         assertThat(list).isEqualTo(listStudents);
     }
@@ -77,6 +83,17 @@ class ElasticServiceTest {
         assertThat(listStudents.stream().map((sh) -> sh.getContent().getAge()).collect(Collectors.toList())).isEqualTo(expectedAddressesOrder);
     }
 
+    @Test
+    void getAllStudentsWithFieldOrderV3(){
+        String field = "age";
+        SortOrder sortOrder = SortOrder.ASC;
+        try {
+            List<StudentModel>  listStudents = elasticService.getAllStudentsWithFieldOrderV3(field, sortOrder);
+            assertThat(listStudents).containsExactlyInAnyOrder(listStudents.toArray(new StudentModel[0]));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     @Test
     void getSuggestionsUsingFirstname() {
         String field = "firstName";

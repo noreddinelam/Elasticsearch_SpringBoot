@@ -26,10 +26,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -59,6 +56,16 @@ public class ElasticService {
         );
         SearchHits<StudentModel> searchHits = elasticTemplate.search(nsq, StudentModel.class);
         return searchHits.getSearchHits();
+    }
+
+    public List<StudentModel> getAllStudentsWithFieldOrderV3(String field, SortOrder sortOrder) throws IOException {
+        SearchSourceBuilder builder = new SearchSourceBuilder().sort(SortBuilders.fieldSort(field).order(sortOrder));
+        SearchRequest searchRequest =
+                new SearchRequest().indices("student").source(builder);
+        SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
+        return Arrays.stream(response.getHits().getHits()).map(org.elasticsearch.search.SearchHit::getSourceAsMap)
+                .map(this::mapOfDocumentFieldsToStudentModelMapper)
+                .collect(Collectors.toList());
     }
 
     public List<SearchHit<StudentModel>> getSuggestions(String field, String query) {
@@ -107,5 +114,11 @@ public class ElasticService {
                 .nbNodes(clusterHealth.getNumberOfNodes())
                 .nbShards(clusterHealth.getActiveShards())
                 .build();
+    }
+
+    /* NOT REQUEST */
+    private StudentModel mapOfDocumentFieldsToStudentModelMapper(Map<String, Object> fields) {
+        return StudentModel.builder().firstName((String) fields.get("firstname")).lastName((String) fields.get(
+                "lastname")).age((Integer) fields.get("age")).address((String) fields.get("address")).build();
     }
 }

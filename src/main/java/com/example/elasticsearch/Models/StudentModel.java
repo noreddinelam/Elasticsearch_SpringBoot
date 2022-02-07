@@ -1,5 +1,6 @@
 package com.example.elasticsearch.Models;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
