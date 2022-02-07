@@ -53,11 +53,11 @@ class ElasticServiceTest {
                 "94000 CRETEIL").build());
     }
 
-    @Test
-    void indexStudents() {
-        List<StudentModel> list = elasticService.indexStudents(listStudents);
-        assertThat(list).isEqualTo(listStudents);
-    }
+//    @Test
+//    void indexStudents() {
+//        List<StudentModel> list = elasticService.indexStudents(listStudents);
+//        assertThat(list).isEqualTo(listStudents);
+//    }
 
     @Test
     void findMaturePersons() {
@@ -104,10 +104,10 @@ class ElasticServiceTest {
     }
 
     @Test
-    void getGroupByAddressAggregation() {
+    void getGroupByAddressAggregationV1() {
         try {
             String aggregationName = "addresses";
-            Map<String, Aggregation> aggregations = elasticService.getGroupsOfStudentsByAddress();
+            Map<String, Aggregation> aggregations = elasticService.getGroupsOfStudentsByAddressV1();
             assertThat(aggregations).hasSize(1);
             assertThat(aggregations.get(aggregationName).getName()).isEqualTo("addresses");
             ParsedStringTerms terms = (ParsedStringTerms) aggregations.get(aggregationName);
@@ -121,6 +121,22 @@ class ElasticServiceTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    void getGroupsOfStudentsByAddressV2() {
+        String aggregationName = "addresses";
+        Map<String, Aggregation> aggregations = elasticService.getGroupsOfStudentsByAddressV2();
+        assertThat(aggregations).hasSize(1);
+        assertThat(aggregations.get(aggregationName).getName()).isEqualTo("addresses");
+        ParsedStringTerms terms = (ParsedStringTerms) aggregations.get(aggregationName);
+        List<String> actual =
+                terms.getBuckets().stream().map(MultiBucketsAggregation.Bucket::getKeyAsString).collect(Collectors.toList());
+        assertThat(actual).hasSize(4).containsExactlyInAnyOrder("2 BD PABLO PICASSO, 94000 CRETEIL", "4 BD PABLO " +
+                "PICASSO, 94000 " +
+                "CRETEIL", "10 BD PABLO PICASSO, 94000 CRETEIL", "17 BD PABLO PICASSO, 94000 CRETEIL");
+        Long l = terms.getBuckets().stream().map(MultiBucketsAggregation.Bucket::getDocCount).reduce(0L, Long::sum);
+        assertThat(l).isEqualTo(6);
     }
 
     @Test

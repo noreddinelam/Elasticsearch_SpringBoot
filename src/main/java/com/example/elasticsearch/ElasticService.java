@@ -21,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.clients.elasticsearch7.ElasticsearchAggregations;
 import org.springframework.data.elasticsearch.core.cluster.ClusterHealth;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.stereotype.Service;
@@ -74,7 +75,7 @@ public class ElasticService {
         return suggestions.getSearchHits();
     }
 
-    public Map<String, Aggregation> getGroupsOfStudentsByAddress() throws IOException {
+    public Map<String, Aggregation> getGroupsOfStudentsByAddressV1() throws IOException {
         TermsAggregationBuilder aggregation = AggregationBuilders.terms("addresses")
                 .field("address");
         SearchSourceBuilder builder = new SearchSourceBuilder().aggregation(aggregation);
@@ -82,6 +83,14 @@ public class ElasticService {
                 new SearchRequest().indices("student").source(builder);
         SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
         return response.getAggregations().asMap();
+    }
+
+    public Map<String, Aggregation> getGroupsOfStudentsByAddressV2() {
+        NativeSearchQuery nsq = new NativeSearchQuery(null);
+        nsq.addAggregation(AggregationBuilders.terms("addresses").field("address"));
+        ElasticsearchAggregations esa = (ElasticsearchAggregations) this.elasticTemplate.search(nsq,
+                StudentModel.class).getAggregations();
+        return esa != null ? esa.aggregations().asMap() : null;
     }
 
     public Map<String, Aggregation> getGroupOfStudentsByAddressAndAverageAge() throws IOException {
